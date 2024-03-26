@@ -5,6 +5,9 @@ using Random
 import Distributions: pdf, MvNormal, rand 
 using PyPlot  
 
+# Include agent and env logic
+include("Agent.jl")
+include("Environment.jl")
 
 # Cruise controller example 
 #  xdot = -b/m v + u/m 
