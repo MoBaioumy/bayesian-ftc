@@ -85,4 +85,25 @@ for t=1:n_samples
     increment_time()
 end
 
+# Retrieve historical data from the environment and agent
+x_history, o_history, u_applied_history = get_environment_history()
+x_mean_history, x_var_history, u_future_history = get_agent_history();
+
+# Plot the desired path as a dashed red line
+plot(desired_path, "r--", label="Desired Velocity")
+# Plot the actual velocity of the environment as a dashed green line
+plot(x_history, "g--", label="Actual Velocity")
+# Plot the agent's estimated state as a dashed blue line
+plot(x_mean_history, "b--", label="Estimated State")
+# Plot observations as blue stars
+plot(o_history, "b*", label="State Observations")
+# Shade the area between the estimated state ± its standard deviation to represent confidence interval
+fill_between(collect(1:n_samples), x_mean_history - sqrt.(x_var_history), 
+    x_mean_history + sqrt.(x_var_history), color="b", alpha=0.2)
+# Enable grid for better readability
+grid("on")
+# Label the x-axis as 't' (time steps)
+xlabel("t")
+# Add a legend in the upper left corner to distinguish between plot elements
+legend(loc="upper left");
 
