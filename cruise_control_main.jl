@@ -61,3 +61,28 @@ placeholder(o, :o)
 algo = messagePassingAlgorithm([x; u_future]) # Figure out a schedule and compile to Julia code
 algo_code = algorithmSourceCode(algo)
 eval(Meta.parse(algo_code))
+
+# Set the number of simulation steps
+n_samples = 100
+# Generate a desired path for the agent to follow
+desired_path = [i/10 for i=1:n_samples]
+# Initialize the starting state and the first control action
+initial_state = 0
+control_action = 0
+
+# Initialize the agent, env, and obs
+infer, get_agent_history = agent(initial_state)
+state_transition, observe, increment_time, get_environment_history = environment(initial_state)
+observation = observe(OBS_NOISE)
+
+# Main simulation loop
+for t=1:n_samples
+    # Infer the next control action, simulate the effect
+    control_action = infer(observation, desired_path[t], control_action)
+    state_transition(control_action)
+    observation = observe(OBS_NOISE)
+    # Increment the internal time step for both the agent and environment
+    increment_time()
+end
+
+
