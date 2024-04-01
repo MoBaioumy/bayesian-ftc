@@ -41,3 +41,56 @@ placeholder(x_future_mean, :x_future_mean)
 placeholder(x_future_var, :x_future_var)
 placeholder(o_1, :o_1)
 placeholder(o_2, :o_2)
+
+# Generate a message Passing Algo
+algo = messagePassingAlgorithm([x; u_future]) # Figure out a schedule and compile to Julia code
+algo_code = algorithmSourceCode(algo)
+eval(Meta.parse(algo_code))
+
+# Define an agent with an initial state (2 sensor case)
+function agent(initial_state)
+    t = 1  # Initialize the time step counter
+    # Initialize the agent's belief about the initial state
+    x_min_mean = initial_state  
+    x_min_var = 100  
+    
+    # Prepare history containers for the agent's estimated state, variance, and future control actions
+    x_mean_history = Vector{Float64}(undef, n_samples)
+    x_var_history = Vector{Float64}(undef, n_samples)
+    u_future_history = Vector{Float64}(undef, n_samples)
+
+    # Define the inference function that updates the agent's beliefs based on new observations
+    function infer(observation_1, observation_2, desired_state, last_control_action)
+        # Prepare the data dictionary for inference
+        data = Dict(
+            :x_min_mean => x_min_mean,
+            :x_min_var => x_min_var,
+            :u => last_control_action, 
+            :x_future_mean => desired_state,
+            :x_future_var => 100,
+            :o_1 => observation_1,
+            :o_2 => observation_2
+        )
+        # Perform inference to update beliefs
+        marginals = step!(data)
+        
+        # Update the agent's beliefs based on the inference results
+        x_min_mean = mean(marginals[:x])
+        x_min_var = var(marginals[:x])
+        
+        # Record the updated beliefs and the inferred future control action
+        x_mean_history[t] = x_min_mean
+        x_var_history[t] = x_min_var
+        u_future_history[t] = mean(marginals[:u_future])
+        
+        # Increment the time step
+        t += 1
+        return u_future_history[t-1]
+    end
+    
+    # Function to retrieve the agent's history of states, variances, and control actions
+    function get_agent_history()
+        return x_mean_history, x_var_history, u_future_history
+    end
+    return infer, get_agent_history
+end
