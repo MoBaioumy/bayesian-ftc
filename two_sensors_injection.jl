@@ -94,3 +94,49 @@ function agent(initial_state)
     end
     return infer, get_agent_history
 end
+
+
+# Define the environment with 2 sensors
+function environment(initial_state)
+    t = 1  # Initialize the time step counter
+    
+    # Prepare history containers for the environment's true state and observations
+    x_history = Vector{Float64}(undef, n_samples)
+    o_1_history = Vector{Float64}(undef, n_samples)
+    o_2_history = Vector{Float64}(undef, n_samples)
+    u_applied_history = Vector{Float64}(undef, n_samples)
+
+    x = initial_state  # Initialize the environment's state
+    
+    # Define the state transition function based on a control action
+    function state_transition(action)
+        u_applied_history[t] = action
+        # Update the state based on the control action and process noise
+        x = (1-b*dt/m)*x + (dt/m)*action + randn() * sqrt(Q_NOISE)
+        x_history[t] = x
+    end
+    
+    # Define the observation function for generating observations based on the current state
+    function observe(noise_variance, sensor_set, injection_size=0)
+        # Generate an observation based on the specified sensor and add it to the corresponding history
+        observation = x + randn() * sqrt(noise_variance) + injection_size
+        if sensor_set == 1
+            o_1_history[t] = observation
+        elseif sensor_set == 2
+            o_2_history[t] = observation
+        end
+        return observation
+    end
+    
+    # Function to increment the environment's time step
+    function increment_time()
+        t += 1
+    end
+    
+    # Function to retrieve the environment's history of states and observations
+    function get_environment_history()
+        return x_history, o_1_history, o_2_history, u_applied_history
+    end
+    return state_transition, observe, increment_time, get_environment_history
+end
+
