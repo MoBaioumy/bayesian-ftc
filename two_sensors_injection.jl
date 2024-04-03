@@ -140,3 +140,35 @@ function environment(initial_state)
     return state_transition, observe, increment_time, get_environment_history
 end
 
+# Define simulation parameters
+n_samples = 100  # Number of simulation steps
+desired_path = [i/10 for i=1:n_samples]  # Desired state values over time
+initial_state = 0  # Starting state of the system
+control_action = 0  # Initial control action
+
+# Initialize the agent and environment with the initial state
+infer, get_agent_history = agent(initial_state) 
+state_transition, observe, increment_time, get_environment_history = environment(initial_state)  
+
+# Make initial observations for both sensors
+observation_1 = observe(OBS_NOISE, 1)  
+observation_2 = observe(OBS_NOISE, 2)  
+
+# Simulation loop
+for t=1:n_samples
+    # Infer the next control action based on current observations, desired state, and last action
+    control_action = infer(observation_1, observation_2, desired_path[t], control_action)
+    # Apply the control action to transition the environment state
+    state_transition(control_action)
+    # Update observations from sensor 1
+    observation_1 = observe(OBS_NOISE, 1)
+    # Conditionally update observations from sensor 2, introducing a change after 50 steps
+    if t < 50
+        observation_2 = observe(OBS_NOISE, 2)
+    else
+        observation_2 = observe(OBS_NOISE, 2, -10)  # Inject an anomaly or change in observation from sensor 2
+    end
+    # Increment the simulation time step
+    increment_time()
+end
+
