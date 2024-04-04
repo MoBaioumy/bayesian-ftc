@@ -172,3 +172,28 @@ for t=1:n_samples
     increment_time()
 end
 
+
+# Retrieve simulation histories
+x_history, o_1_history, o_2_history, u_applied_history = get_environment_history()
+x_mean_history, x_var_history, u_future_history = get_agent_history();
+
+# Plot desired path and actual state
+plot(desired_path, "r--", label="Desired Velocity")
+plot(x_history, "g--", label="Actual Velocity")
+
+# Plot agent's estimated state
+plot(x_mean_history, "b--", label="Estimated State")
+
+# Plot observations from both sensors
+plot(o_1_history, "r*", label="Sensor 1 Observations")
+plot(o_2_history, "g*", label="Sensor 2 Observations")
+
+# Display confidence interval around estimated state
+fill_between(collect(1:n_samples), x_mean_history - sqrt.(x_var_history), 
+    x_mean_history + sqrt.(x_var_history), color="b", alpha=0.2)
+
+# Finalize plot
+grid("on")
+xlabel("t")
+legend(loc="upper left");
+
