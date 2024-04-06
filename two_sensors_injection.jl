@@ -197,3 +197,19 @@ grid("on")
 xlabel("t")
 legend(loc="upper left");
 
+# Calculate RMSE between the desired path and the actual/estimated states
+rmse_actual = sqrt(mean((desired_path - x_history).^2))
+rmse_estimated = sqrt(mean((desired_path - x_mean_history).^2))
+
+println("RMSE Actual: $rmse_actual")
+println("RMSE Estimated: $rmse_estimated")
+
+# Save the plot to a file
+savefig("simulation_results.png")
+
+# Save simulation data to CSV or similar format for further analysis
+using CSV, DataFrames
+df = DataFrame(Time=1:n_samples, DesiredPath=desired_path, ActualVelocity=x_history, EstimatedState=x_mean_history)
+CSV.write("simulation_data.csv", df)
+
+
